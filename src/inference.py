@@ -2,7 +2,8 @@ import os
 import joblib
 import pandas as pd
 from loguru import logger
-
+import mlflow
+from utils import setup_mlflow
 
 def load_model(model_path):
     """
@@ -36,7 +37,21 @@ def generate_predictions(model, test_data):
 
 
 if __name__ == "__main__":
-    model = load_model("models/model.joblib")
+
+    # Setup MLflow
+    setup_mlflow()
+
+    # Try to read run_id from file
+    try:
+        with open('run_id.txt', 'r') as f:
+            run_id = f.read().strip()
+        mlflow.start_run(run_id=run_id)
+    except:
+        mlflow.start_run()
+
+    model_uri = f"runs:/{run_id}/model"
+    model = mlflow.sklearn.load_model(model_uri)
+
     logger.info("Model loaded successfully")
     data_to_predict = pd.read_csv("data/test.csv")
     logger.info("Loaded test data")
