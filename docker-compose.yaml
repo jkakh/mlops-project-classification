@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_TRACKING_URI=http://localhost:5000
+    command: mlflow server --host 0.0.0.0 --port 5000
+    networks:
+      - mlops-network
+    volumes:
+      - mlflow-data:/mlruns
+
+  data-prep:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - mlflow
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    command: uv run src/data_prep.py
+    volumes:
+      - .:/mlops-classification-project
+    networks:
+      - mlops-network
+
+  train:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - mlflow
+      - data-prep
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    command: uv run src/train.py
+    volumes:
+      - .:/mlops-classification-project
+    networks:
+      - mlops-network
+
+  inference:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - mlflow
+      - train
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    command: uv run src/inference.py
+    volumes:
+      - .:/mlops-classification-project
+    networks:
+      - mlops-network
+
+networks:
+  mlops-network:
+    driver: bridge
+
+volumes:
+  mlflow-data:
