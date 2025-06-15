@@ -26,13 +26,11 @@ jobs:
           # Install a specific version of uv.
           version: "0.7.13"
 
-      - name: Install dependencies
+      - name: Install dependencies and run pytest
         run: |
             uv sync
             source .venv/bin/activate
-
-      - name: Run pytest
-        run: pytest
+            pytest
 
   build-and-push:
     needs: test
