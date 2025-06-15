@@ -30,12 +30,12 @@ jobs:
         run: |
             uv sync
             uv build
-            source .venv/bin/activate
-            pytest
-
   build-and-push:
     needs: test
     runs-on: ubuntu-latest
+    # env:
+    #   DOCKER_REGISTRY: ghcr.io
+    #   DOCKER_IMAGE_NAME: ${{ github.repository }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -56,4 +56,5 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:latest
+          tags: ${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_IMAGE_NAME }}:latest
+          
